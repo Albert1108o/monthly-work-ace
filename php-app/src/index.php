@@ -11,15 +11,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->execute([(int) ($_POST['id'] ?? 0)]);
     } else {
         $dia = trim((string) ($_POST['dia'] ?? ''));
-        $horas = (float) str_replace(',', '.', (string) ($_POST['horas'] ?? ''));
-        if ($dia === '' || $horas <= 0 || $horas > 24) {
-            $erro = 'Informe uma data válida e horas entre 0 e 24.';
+        $horas = (int) ($_POST['horas'] ?? 0);
+        $minutos = (int) ($_POST['minutos'] ?? 0);
+        $total = $horas + ($minutos / 60);
+
+        if ($dia === '' || $total <= 0 || $total > 24 || $horas < 0 || $horas > 23 || $minutos < 0 || $minutos > 59) {
+            $erro = 'Informe uma data válida e horas/minutos entre 0 e 23h59.';
         } else {
             $stmt = db()->prepare(
                 'INSERT INTO registros (dia, horas) VALUES (:dia, :horas)
                  ON CONFLICT(dia) DO UPDATE SET horas = :horas'
             );
-            $stmt->execute([':dia' => $dia, ':horas' => $horas]);
+            $stmt->execute([':dia' => $dia, ':horas' => $total]);
         }
     }
     if ($erro === null) {
@@ -77,8 +80,11 @@ function hhmm(float $h): string
     <label>Dia trabalhado
       <input type="date" name="dia" value="<?= htmlspecialchars(date('Y-m-d')) ?>" required>
     </label>
-    <label>Horas no dia
-      <input type="number" name="horas" step="0.25" min="0.25" max="24" placeholder="8" required>
+    <label>Horas
+      <input type="number" name="horas" min="0" max="23" value="0" required>
+    </label>
+    <label>Minutos
+      <input type="number" name="minutos" min="0" max="59" value="0" required>
     </label>
     <button type="submit">Salvar</button>
   </form>
