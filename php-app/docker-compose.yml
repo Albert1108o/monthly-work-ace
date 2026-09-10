@@ -1,0 +1,14 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8000:80"
+    environment:
+      DB_DIR: /var/www/data
+    volumes:
+      - ./src:/var/www/html
+      - horas_data:/var/www/data
+    restart: unless-stopped
+
+volumes:
+  horas_data:
