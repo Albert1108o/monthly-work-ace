@@ -80,8 +80,11 @@ function hhmm(float $h): string
     <label>Dia trabalhado
       <input type="date" name="dia" value="<?= htmlspecialchars(date('Y-m-d')) ?>" required>
     </label>
-    <label>Horas no dia
-      <input type="number" name="horas" step="0.25" min="0.25" max="24" placeholder="8" required>
+    <label>Horas
+      <input type="number" name="horas" min="0" max="23" value="0" required>
+    </label>
+    <label>Minutos
+      <input type="number" name="minutos" min="0" max="59" value="0" required>
     </label>
     <button type="submit">Salvar</button>
   </form>
