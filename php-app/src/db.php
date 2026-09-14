@@ -23,8 +23,10 @@ function db(): PDO
 
         $pdo->exec('CREATE TABLE IF NOT EXISTS registros (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            dia TEXT NOT NULL UNIQUE,
-            horas REAL NOT NULL
+            usuario_id INTEGER NOT NULL,
+            dia TEXT NOT NULL,
+            horas REAL NOT NULL,
+            UNIQUE (usuario_id, dia)
         )');
 
         // Migração: vincula registros a usuários (um dia por usuário)
@@ -48,6 +50,27 @@ function db(): PDO
             $pdo->exec('DROP TABLE registros');
             $pdo->exec('ALTER TABLE registros_novo RENAME TO registros');
         }
+
+        // Tabela de papéis separada da tabela de usuários
+        $pdo->exec('CREATE TABLE IF NOT EXISTS user_roles (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+            role TEXT NOT NULL,
+            UNIQUE (user_id, role)
+        )');
     }
     return $pdo;
+}
+
+function hasRole(int $userId, string $role): bool
+{
+    $stmt = db()->prepare('SELECT 1 FROM user_roles WHERE user_id = ? AND role = ?');
+    $stmt->execute([$userId, $role]);
+    return (bool) $stmt->fetch();
+}
+
+function addRole(int $userId, string $role): void
+{
+    $stmt = db()->prepare('INSERT OR IGNORE INTO user_roles (user_id, role) VALUES (?, ?)');
+    $stmt->execute([$userId, $role]);
 }

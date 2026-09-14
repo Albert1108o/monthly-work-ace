@@ -30,7 +30,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $stmt = db()->prepare('INSERT INTO usuarios (nome, email, senha_hash) VALUES (?, ?, ?)');
             $stmt->execute([$nome, $email, password_hash($senha, PASSWORD_DEFAULT)]);
-            $_SESSION['usuario_id'] = (int) db()->lastInsertId();
+            $novoId = (int) db()->lastInsertId();
+            $_SESSION['usuario_id'] = $novoId;
+
+            // O primeiro usuário cadastrado se torna administrador automaticamente
+            $totalUsuarios = (int) db()->query('SELECT COUNT(*) FROM usuarios')->fetchColumn();
+            if ($totalUsuarios <= 1) {
+                addRole($novoId, 'admin');
+            }
+
             header('Location: index.php');
             exit;
         }

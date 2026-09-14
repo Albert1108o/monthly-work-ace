@@ -30,3 +30,22 @@ function exigirLogin(): array
     }
     return $u;
 }
+
+function usuarioAdmin(): bool
+{
+    $u = usuarioLogado();
+    if (!$u) {
+        return false;
+    }
+    return hasRole((int) $u['id'], 'admin');
+}
+
+function exigirAdmin(): array
+{
+    $u = exigirLogin();
+    if (!hasRole((int) $u['id'], 'admin')) {
+        header('Location: index.php');
+        exit;
+    }
+    return $u;
+}
