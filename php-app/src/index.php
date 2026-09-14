@@ -1,14 +1,17 @@
 <?php
 declare(strict_types=1);
-require __DIR__ . '/db.php';
+require __DIR__ . '/auth.php';
+
+$usuario = exigirLogin();
+$usuarioId = (int) $usuario['id'];
 
 $erro = null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $acao = $_POST['acao'] ?? '';
     if ($acao === 'excluir') {
-        $stmt = db()->prepare('DELETE FROM registros WHERE id = ?');
-        $stmt->execute([(int) ($_POST['id'] ?? 0)]);
+        $stmt = db()->prepare('DELETE FROM registros WHERE id = ? AND usuario_id = ?');
+        $stmt->execute([(int) ($_POST['id'] ?? 0), $usuarioId]);
     } else {
         $dia = trim((string) ($_POST['dia'] ?? ''));
         $entrada = (string) ($_POST['entrada'] ?? '');
@@ -28,10 +31,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $erro = 'Informe uma data válida e horários de entrada e saída corretos.';
         } else {
             $stmt = db()->prepare(
-                'INSERT INTO registros (dia, horas) VALUES (:dia, :horas)
-                 ON CONFLICT(dia) DO UPDATE SET horas = :horas'
+                'INSERT INTO registros (usuario_id, dia, horas) VALUES (:uid, :dia, :horas)
+                 ON CONFLICT(usuario_id, dia) DO UPDATE SET horas = :horas'
             );
-            $stmt->execute([':dia' => $dia, ':horas' => $total]);
+            $stmt->execute([':uid' => $usuarioId, ':dia' => $dia, ':horas' => $total]);
         }
     }
     if ($erro === null) {
@@ -46,8 +49,8 @@ if (!preg_match('/^\d{4}-\d{2}$/', $mes)) {
     $mes = date('Y-m');
 }
 
-$stmt = db()->prepare('SELECT * FROM registros WHERE substr(dia,1,7) = ? ORDER BY dia');
-$stmt->execute([$mes]);
+$stmt = db()->prepare('SELECT * FROM registros WHERE usuario_id = ? AND substr(dia,1,7) = ? ORDER BY dia');
+$stmt->execute([$usuarioId, $mes]);
 $registros = $stmt->fetchAll();
 
 $totalHoras = 0.0;
@@ -73,7 +76,10 @@ function hhmm(float $h): string
 </head>
 <body>
 <main>
-  <h1>Controle de Horas Trabalhadas</h1>
+  <div class="linha">
+    <h1>Controle de Horas Trabalhadas</h1>
+  </div>
+  <p>Olá, <strong><?= htmlspecialchars((string) $usuario['nome']) ?></strong> — <a href="logout.php">sair</a></p>
 
   <form method="get" class="card linha">
     <label>Mês
