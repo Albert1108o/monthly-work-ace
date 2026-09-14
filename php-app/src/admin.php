@@ -52,7 +52,12 @@ $registros = $stmtReg->fetchAll();
   <div class="linha">
     <h1>Administração</h1>
   </div>
-  <p>Olá, <strong><?= htmlspecialchars((string) $usuario['nome']) ?></strong> — <a href="index.php">meus registros</a> — <a href="logout.php">sair</a></p>
+  <p>
+    Olá, <strong><?= htmlspecialchars((string) $usuario['nome']) ?></strong> —
+    <a href="promover-admin.php">promover administrador</a> —
+    <a href="index.php">meus registros</a> —
+    <a href="logout.php">sair</a>
+  </p>
 
   <form method="get" class="card linha">
     <label>Mês
