@@ -18,3 +18,7 @@ th, td { text-align:left; padding:10px 8px; border-bottom:1px solid rgba(255,255
 th { color:var(--muted); font-weight:500; }
 .vazio { color:var(--muted); text-align:center; }
 .erro { color:#ff8a8a; }
+a { color: var(--accent); }
+ul { padding-left: 20px; }
+ul li { margin-bottom: 8px; }
+h2 { font-size: 1.15rem; margin-top: 28px; margin-bottom: 12px; }

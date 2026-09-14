@@ -79,7 +79,11 @@ function hhmm(float $h): string
   <div class="linha">
     <h1>Controle de Horas Trabalhadas</h1>
   </div>
-  <p>Olá, <strong><?= htmlspecialchars((string) $usuario['nome']) ?></strong> — <a href="logout.php">sair</a></p>
+  <p>
+    Olá, <strong><?= htmlspecialchars((string) $usuario['nome']) ?></strong> —
+    <?php if (usuarioAdmin()): ?><a href="admin.php">administração</a> —<?php endif; ?>
+    <a href="logout.php">sair</a>
+  </p>
 
   <form method="get" class="card linha">
     <label>Mês
