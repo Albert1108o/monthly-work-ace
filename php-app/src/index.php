@@ -11,12 +11,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->execute([(int) ($_POST['id'] ?? 0)]);
     } else {
         $dia = trim((string) ($_POST['dia'] ?? ''));
-        $horas = (int) ($_POST['horas'] ?? 0);
-        $minutos = (int) ($_POST['minutos'] ?? 0);
-        $total = $horas + ($minutos / 60);
+        $entrada = (string) ($_POST['entrada'] ?? '');
+        $saida = (string) ($_POST['saida'] ?? '');
 
-        if ($dia === '' || $total <= 0 || $total > 24 || $horas < 0 || $horas > 23 || $minutos < 0 || $minutos > 59) {
-            $erro = 'Informe uma data válida e horas/minutos entre 0 e 23h59.';
+        $total = null;
+        if (preg_match('/^(\d{1,2}):(\d{2})$/', $entrada, $me) && preg_match('/^(\d{1,2}):(\d{2})$/', $saida, $ms)) {
+            $minEntrada = (int) $me[1] * 60 + (int) $me[2];
+            $minSaida = (int) $ms[1] * 60 + (int) $ms[2];
+            if ($minSaida < $minEntrada) {
+                $minSaida += 24 * 60;
+            }
+            $total = ($minSaida - $minEntrada) / 60;
+        }
+
+        if ($dia === '' || $total === null || $total <= 0 || $total > 24) {
+            $erro = 'Informe uma data válida e horários de entrada e saída corretos.';
         } else {
             $stmt = db()->prepare(
                 'INSERT INTO registros (dia, horas) VALUES (:dia, :horas)
