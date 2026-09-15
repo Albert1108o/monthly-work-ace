@@ -31,10 +31,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $erro = 'Informe uma data válida e horários de entrada e saída corretos.';
         } else {
             $stmt = db()->prepare(
-                'INSERT INTO registros (usuario_id, dia, horas) VALUES (:uid, :dia, :horas)
-                 ON CONFLICT(usuario_id, dia) DO UPDATE SET horas = :horas'
+                'INSERT INTO registros (usuario_id, dia, horas) VALUES (?, ?, ?)
+                 ON CONFLICT (usuario_id, dia) DO UPDATE SET horas = EXCLUDED.horas'
             );
-            $stmt->execute([':uid' => $usuarioId, ':dia' => $dia, ':horas' => $total]);
+            $stmt->execute([$usuarioId, $dia, $total]);
         }
     }
     if ($erro === null) {
