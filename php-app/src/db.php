@@ -5,55 +5,51 @@ function db(): PDO
 {
     static $pdo = null;
     if ($pdo === null) {
-        $dir = getenv('DB_DIR') ?: __DIR__ . '/../data';
-        if (!is_dir($dir)) {
-            mkdir($dir, 0777, true);
+        $host = getenv('DB_HOST') ?: 'db';
+        $port = getenv('DB_PORT') ?: '5432';
+        $name = getenv('DB_NAME') ?: 'horas';
+        $user = getenv('DB_USER') ?: 'horas';
+        $pass = getenv('DB_PASSWORD') ?: 'horas';
+
+        $dsn = sprintf('pgsql:host=%s;port=%s;dbname=%s', $host, $port, $name);
+
+        // O banco pode demorar alguns segundos para aceitar conexões na primeira subida
+        $ultimoErro = null;
+        for ($tentativa = 0; $tentativa < 15; $tentativa++) {
+            try {
+                $pdo = new PDO($dsn, $user, $pass);
+                break;
+            } catch (PDOException $e) {
+                $ultimoErro = $e;
+                sleep(2);
+            }
         }
-        $pdo = new PDO('sqlite:' . $dir . '/horas.sqlite');
+        if ($pdo === null) {
+            throw new RuntimeException('Não foi possível conectar ao banco de dados: ' . ($ultimoErro ? $ultimoErro->getMessage() : ''));
+        }
+
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
 
         $pdo->exec('CREATE TABLE IF NOT EXISTS usuarios (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             nome TEXT NOT NULL,
             email TEXT NOT NULL UNIQUE,
             senha_hash TEXT NOT NULL,
-            criado_em TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+            criado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
         )');
 
         $pdo->exec('CREATE TABLE IF NOT EXISTS registros (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            usuario_id INTEGER NOT NULL,
+            id SERIAL PRIMARY KEY,
+            usuario_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
             dia TEXT NOT NULL,
-            horas REAL NOT NULL,
+            horas DOUBLE PRECISION NOT NULL,
             UNIQUE (usuario_id, dia)
         )');
 
-        // Migração: vincula registros a usuários (um dia por usuário)
-        $cols = $pdo->query('PRAGMA table_info(registros)')->fetchAll();
-        $temUsuario = false;
-        foreach ($cols as $c) {
-            if ($c['name'] === 'usuario_id') {
-                $temUsuario = true;
-            }
-        }
-        if (!$temUsuario) {
-            $pdo->exec('CREATE TABLE registros_novo (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                usuario_id INTEGER NOT NULL,
-                dia TEXT NOT NULL,
-                horas REAL NOT NULL,
-                UNIQUE (usuario_id, dia)
-            )');
-            $pdo->exec('INSERT INTO registros_novo (usuario_id, dia, horas)
-                        SELECT 0, dia, horas FROM registros');
-            $pdo->exec('DROP TABLE registros');
-            $pdo->exec('ALTER TABLE registros_novo RENAME TO registros');
-        }
-
         // Tabela de papéis separada da tabela de usuários
         $pdo->exec('CREATE TABLE IF NOT EXISTS user_roles (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             user_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
             role TEXT NOT NULL,
             UNIQUE (user_id, role)
@@ -71,6 +67,6 @@ function hasRole(int $userId, string $role): bool
 
 function addRole(int $userId, string $role): void
 {
-    $stmt = db()->prepare('INSERT OR IGNORE INTO user_roles (user_id, role) VALUES (?, ?)');
+    $stmt = db()->prepare('INSERT INTO user_roles (user_id, role) VALUES (?, ?) ON CONFLICT (user_id, role) DO NOTHING');
     $stmt->execute([$userId, $role]);
 }

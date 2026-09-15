@@ -4,11 +4,30 @@ services:
     ports:
       - "8000:80"
     environment:
-      DB_DIR: /var/www/data
+      # Para usar um banco na internet (compartilhado entre máquinas),
+      # troque estes valores pelos do seu servidor PostgreSQL.
+      DB_HOST: ${DB_HOST:-db}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_NAME: ${DB_NAME:-horas}
+      DB_USER: ${DB_USER:-horas}
+      DB_PASSWORD: ${DB_PASSWORD:-horas}
     volumes:
       - ./src:/var/www/html
-      - horas_data:/var/www/data
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: ${DB_NAME:-horas}
+      POSTGRES_USER: ${DB_USER:-horas}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-horas}
+    ports:
+      - "5432:5432"
+    volumes:
+      - horas_pg:/var/lib/postgresql/data
     restart: unless-stopped
 
 volumes:
-  horas_data:
+  horas_pg:
