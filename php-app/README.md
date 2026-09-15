@@ -1,4 +1,4 @@
-# Controle de Horas Trabalhadas (PHP + SQLite)
+# Controle de Horas Trabalhadas (PHP + PostgreSQL)
 
 ## Como rodar
 
@@ -16,4 +16,18 @@ Acesse http://localhost:8000
 - O primeiro usuário cadastrado vira administrador automaticamente.
 - Administradores acessam `admin.php` para ver todos os usuários e as horas trabalhadas no mês.
 - Administradores podem promover outros usuários a administrador em `promover-admin.php`.
-- Os dados ficam em um banco SQLite persistido no volume `horas_data`.
+
+## Usar as mesmas contas em várias máquinas
+
+Por padrão o compose sobe um banco PostgreSQL local (serviço `db`), que continua
+sendo separado em cada computador.
+
+Para que o login funcione em qualquer máquina, aponte todas elas para o **mesmo**
+banco PostgreSQL hospedado na internet (Neon, Supabase, Railway, um VPS, etc.):
+
+1. Copie `.env.example` para `.env`.
+2. Preencha `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER` e `DB_PASSWORD` com os dados do
+   servidor.
+3. Rode `docker compose up --build app` (sem subir o serviço `db` local).
+
+As tabelas são criadas automaticamente na primeira execução.

@@ -28,9 +28,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($existe->fetch()) {
             $erro = 'Já existe uma conta com esse e-mail.';
         } else {
-            $stmt = db()->prepare('INSERT INTO usuarios (nome, email, senha_hash) VALUES (?, ?, ?)');
+            $stmt = db()->prepare('INSERT INTO usuarios (nome, email, senha_hash) VALUES (?, ?, ?) RETURNING id');
             $stmt->execute([$nome, $email, password_hash($senha, PASSWORD_DEFAULT)]);
-            $novoId = (int) db()->lastInsertId();
+            $novoId = (int) $stmt->fetchColumn();
             $_SESSION['usuario_id'] = $novoId;
 
             // O primeiro usuário cadastrado se torna administrador automaticamente
