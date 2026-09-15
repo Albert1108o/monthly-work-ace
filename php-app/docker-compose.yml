@@ -2,7 +2,7 @@ services:
   app:
     build: .
     ports:
-      - "8000:80"
+      - "8001:80"
     environment:
       # Para usar um banco na internet (compartilhado entre máquinas),
       # troque estes valores pelos do seu servidor PostgreSQL.
