@@ -116,6 +116,16 @@ function hhmm(float $h): string
     <button type="submit">Salvar</button>
   </form>
 
+  <section class="card progresso">
+    <div class="titulo">Progresso do estágio</div>
+    <div class="numeros">
+      <div><strong><?= hhmm($totalGeral) ?></strong> <span class="meta">/ <?= (int) $metaHoras ?>h</span></div>
+      <div class="restantes"><?= hhmm($restantes) ?> restantes</div>
+    </div>
+    <div class="barra"><span style="width: <?= number_format($percentual, 2, '.', '') ?>%"></span></div>
+    <div class="percentual"><?= number_format($percentual, 1, ',', '') ?>% concluído</div>
+  </section>
+
   <section class="resumo">
     <div class="card"><span>Dias trabalhados</span><strong><?= $diasTrabalhados ?></strong></div>
     <div class="card"><span>Total do mês</span><strong><?= hhmm($totalHoras) ?></strong></div>
