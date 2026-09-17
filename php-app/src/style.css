@@ -31,3 +31,13 @@ h2 { font-size: 1.15rem; margin-top: 28px; margin-bottom: 12px; }
 .ver-senha { flex-direction:row; align-items:center; gap:8px; margin-top:-4px; }
 .ver-senha input { width:auto; }
 .sucesso { color:#8aff8a; }
+
+.progresso { display: block; }
+.progresso .titulo { color: var(--muted, #8b8ba7); font-size: .95rem; margin-bottom: .4rem; }
+.progresso .numeros { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.progresso .numeros strong { font-size: 2rem; }
+.progresso .numeros .meta { font-size: 2rem; opacity: .45; font-weight: 700; }
+.progresso .restantes { font-size: .9rem; color: #7c6cf0; }
+.progresso .barra { margin-top: .8rem; height: 10px; border-radius: 999px; background: rgba(124,108,240,.18); overflow: hidden; }
+.progresso .barra span { display: block; height: 100%; border-radius: 999px; background: #7c6cf0; }
+.progresso .percentual { margin-top: .5rem; font-size: .85rem; opacity: .7; }

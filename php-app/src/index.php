@@ -53,6 +53,14 @@ $stmt = db()->prepare('SELECT * FROM registros WHERE usuario_id = ? AND substr(d
 $stmt->execute([$usuarioId, $mes]);
 $registros = $stmt->fetchAll();
 
+$stmtGeral = db()->prepare('SELECT COALESCE(SUM(horas), 0) FROM registros WHERE usuario_id = ?');
+$stmtGeral->execute([$usuarioId]);
+$totalGeral = (float) $stmtGeral->fetchColumn();
+
+$metaHoras = 300.0;
+$restantes = max(0.0, $metaHoras - $totalGeral);
+$percentual = $metaHoras > 0 ? min(100.0, $totalGeral / $metaHoras * 100) : 0.0;
+
 $totalHoras = 0.0;
 foreach ($registros as $r) {
     $totalHoras += (float) $r['horas'];
