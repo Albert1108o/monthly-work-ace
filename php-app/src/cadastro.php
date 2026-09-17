@@ -8,7 +8,6 @@ if (usuarioLogado()) {
     exit;
 }
 
-$tipo = ($_POST['tipo'] ?? $_GET['tipo'] ?? 'estagiario') === 'professor' ? 'professor' : 'estagiario';
 $erro = null;
 $nome = '';
 $email = '';
@@ -33,21 +32,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute([$nome, $email, password_hash($senha, PASSWORD_DEFAULT)]);
             $novoId = (int) $stmt->fetchColumn();
             $_SESSION['usuario_id'] = $novoId;
-
-            $totalUsuarios = (int) db()->query('SELECT COUNT(*) FROM usuarios')->fetchColumn();
-            if ($tipo === 'professor' || $totalUsuarios <= 1) {
-                addRole($novoId, 'admin');
-                header('Location: admin.php');
-                exit;
-            }
-
-            header('Location: index.php');
+            addRole($novoId, 'admin');
+            header('Location: admin.php');
             exit;
         }
     }
 }
-
-$titulo = $tipo === 'professor' ? 'Criar conta de professor orientador' : 'Criar conta de estagiário';
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -59,17 +49,13 @@ $titulo = $tipo === 'professor' ? 'Criar conta de professor orientador' : 'Criar
 </head>
 <body>
 <main>
-  <h1><?= htmlspecialchars($titulo) ?></h1>
+  <h1>Criar conta de professor orientador</h1>
 
-  <nav class="abas">
-    <a href="cadastro.php?tipo=estagiario" class="<?= $tipo === 'estagiario' ? 'ativa' : '' ?>">Estagiário</a>
-    <a href="cadastro.php?tipo=professor" class="<?= $tipo === 'professor' ? 'ativa' : '' ?>">Professor orientador</a>
-  </nav>
+  <p>Apenas professores orientadores criam a própria conta. Os estagiários são cadastrados pelo professor.</p>
 
   <?php if ($erro): ?><p class="erro"><?= htmlspecialchars($erro) ?></p><?php endif; ?>
 
   <form method="post" class="card">
-    <input type="hidden" name="tipo" value="<?= htmlspecialchars($tipo) ?>">
     <label>Nome
       <input type="text" name="nome" value="<?= htmlspecialchars($nome) ?>" required>
     </label>
@@ -89,7 +75,7 @@ $titulo = $tipo === 'professor' ? 'Criar conta de professor orientador' : 'Criar
     <button type="submit">Cadastrar</button>
   </form>
 
-  <p>Já tem conta? <a href="login.php?tipo=<?= htmlspecialchars($tipo) ?>">Entrar</a></p>
+  <p>Já tem conta? <a href="login.php?tipo=professor">Entrar</a></p>
 </main>
 </body>
 </html>
