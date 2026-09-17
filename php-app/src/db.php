@@ -54,6 +54,13 @@ function db(): PDO
             role TEXT NOT NULL,
             UNIQUE (user_id, role)
         )');
+
+        // Alunos entram com CPF + data de nascimento (sem e-mail/senha)
+        $pdo->exec('ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS cpf TEXT');
+        $pdo->exec('ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS data_nascimento TEXT');
+        $pdo->exec('ALTER TABLE usuarios ALTER COLUMN email DROP NOT NULL');
+        $pdo->exec('ALTER TABLE usuarios ALTER COLUMN senha_hash DROP NOT NULL');
+        $pdo->exec('CREATE UNIQUE INDEX IF NOT EXISTS usuarios_cpf_idx ON usuarios (cpf)');
     }
     return $pdo;
 }

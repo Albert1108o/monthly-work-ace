@@ -11,8 +11,9 @@ if (usuarioLogado()) {
 $tipo = ($_POST['tipo'] ?? $_GET['tipo'] ?? 'estagiario') === 'professor' ? 'professor' : 'estagiario';
 $erro = null;
 $email = '';
+$cpf = '';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $tipo === 'professor') {
     $email = strtolower(trim((string) ($_POST['email'] ?? '')));
     $senha = (string) ($_POST['senha'] ?? '');
 
@@ -20,20 +21,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt->execute([$email]);
     $u = $stmt->fetch();
 
-    if ($u && password_verify($senha, (string) $u['senha_hash'])) {
-        $ehProfessor = hasRole((int) $u['id'], 'admin');
-        if ($tipo === 'professor' && !$ehProfessor) {
+    if ($u && $u['senha_hash'] && password_verify($senha, (string) $u['senha_hash'])) {
+        if (!hasRole((int) $u['id'], 'admin')) {
             $erro = 'Esta conta não é de professor orientador. Use a aba Estagiário.';
-        } elseif ($tipo === 'estagiario' && $ehProfessor) {
-            $erro = 'Esta conta é de professor orientador. Use a aba Professor orientador.';
         } else {
             $_SESSION['usuario_id'] = (int) $u['id'];
-            header('Location: ' . ($ehProfessor ? 'admin.php' : 'index.php'));
+            header('Location: admin.php');
             exit;
         }
     } else {
         $erro = 'E-mail ou senha incorretos.';
     }
+} elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $cpf = preg_replace('/\D/', '', (string) ($_POST['cpf'] ?? '')) ?? '';
+    $nascimento = (string) ($_POST['nascimento'] ?? '');
+
+    $stmt = db()->prepare('SELECT * FROM usuarios WHERE cpf = ?');
+    $stmt->execute([$cpf]);
+    $u = $stmt->fetch();
+
+    if ($u && (string) $u['data_nascimento'] === $nascimento) {
+        $_SESSION['usuario_id'] = (int) $u['id'];
+        header('Location: index.php');
+        exit;
+    }
+    $erro = 'CPF ou data de nascimento incorretos. Peça ao professor orientador para cadastrar você.';
 }
 
 $titulo = $tipo === 'professor' ? 'Entrar como professor orientador' : 'Entrar como estagiário';
@@ -57,8 +69,9 @@ $titulo = $tipo === 'professor' ? 'Entrar como professor orientador' : 'Entrar c
 
   <?php if ($erro): ?><p class="erro"><?= htmlspecialchars($erro) ?></p><?php endif; ?>
 
+  <?php if ($tipo === 'professor'): ?>
   <form method="post" class="card">
-    <input type="hidden" name="tipo" value="<?= htmlspecialchars($tipo) ?>">
+    <input type="hidden" name="tipo" value="professor">
     <label>E-mail
       <input type="email" name="email" value="<?= htmlspecialchars($email) ?>" required>
     </label>
@@ -72,7 +85,21 @@ $titulo = $tipo === 'professor' ? 'Entrar como professor orientador' : 'Entrar c
     <button type="submit">Entrar</button>
   </form>
 
-  <p>Não tem conta? <a href="cadastro.php?tipo=<?= htmlspecialchars($tipo) ?>">Criar conta de <?= $tipo === 'professor' ? 'professor orientador' : 'estagiário' ?></a></p>
+  <p>Não tem conta? <a href="cadastro.php">Criar conta de professor orientador</a></p>
+  <?php else: ?>
+  <form method="post" class="card">
+    <input type="hidden" name="tipo" value="estagiario">
+    <label>Login (CPF)
+      <input type="text" name="cpf" inputmode="numeric" value="<?= htmlspecialchars($cpf) ?>" required>
+    </label>
+    <label>Data de nascimento
+      <input type="date" name="nascimento" required>
+    </label>
+    <button type="submit">Entrar</button>
+  </form>
+
+  <p>Estagiários são cadastrados pelo professor orientador.</p>
+  <?php endif; ?>
 </main>
 </body>
 </html>
