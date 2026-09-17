@@ -80,6 +80,9 @@ $registros = $stmtReg->fetchAll();
     <button type="submit">Ver mês</button>
   </form>
 
+  <?php if ($aviso): ?><p class="erro"><?= htmlspecialchars($aviso) ?></p><?php endif; ?>
+  <?php if ($sucesso): ?><p class="sucesso"><?= htmlspecialchars($sucesso) ?></p><?php endif; ?>
+
   <h2>Usuários e horas do mês</h2>
   <table class="card">
     <thead>
@@ -88,11 +91,12 @@ $registros = $stmtReg->fetchAll();
         <th>E-mail</th>
         <th>Dias trabalhados</th>
         <th>Total do mês</th>
+        <th></th>
       </tr>
     </thead>
     <tbody>
     <?php if (!$usuarios): ?>
-      <tr><td colspan="4" class="vazio">Nenhum usuário cadastrado.</td></tr>
+      <tr><td colspan="5" class="vazio">Nenhum usuário cadastrado.</td></tr>
     <?php endif; ?>
     <?php foreach ($usuarios as $u): ?>
       <tr>
@@ -100,6 +104,16 @@ $registros = $stmtReg->fetchAll();
         <td><?= htmlspecialchars((string) $u['email']) ?></td>
         <td><?= (int) $u['dias_trabalhados'] ?></td>
         <td><?= hhmm((float) $u['total_horas']) ?></td>
+        <td>
+          <?php if ((int) $u['id'] !== (int) $usuario['id']): ?>
+          <form method="post" onsubmit="return confirm('Excluir este usuário e todos os registros dele?')">
+            <input type="hidden" name="acao" value="excluir_usuario">
+            <input type="hidden" name="id" value="<?= (int) $u['id'] ?>">
+            <input type="hidden" name="mes" value="<?= htmlspecialchars($mes) ?>">
+            <button class="link" type="submit">excluir</button>
+          </form>
+          <?php endif; ?>
+        </td>
       </tr>
     <?php endforeach; ?>
     </tbody>
