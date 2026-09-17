@@ -8,6 +8,7 @@ if (usuarioLogado()) {
     exit;
 }
 
+$tipo = ($_POST['tipo'] ?? $_GET['tipo'] ?? 'estagiario') === 'professor' ? 'professor' : 'estagiario';
 $erro = null;
 $email = '';
 
@@ -20,12 +21,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $u = $stmt->fetch();
 
     if ($u && password_verify($senha, (string) $u['senha_hash'])) {
-        $_SESSION['usuario_id'] = (int) $u['id'];
-        header('Location: index.php');
-        exit;
+        $ehProfessor = hasRole((int) $u['id'], 'admin');
+        if ($tipo === 'professor' && !$ehProfessor) {
+            $erro = 'Esta conta não é de professor orientador. Use a aba Estagiário.';
+        } elseif ($tipo === 'estagiario' && $ehProfessor) {
+            $erro = 'Esta conta é de professor orientador. Use a aba Professor orientador.';
+        } else {
+            $_SESSION['usuario_id'] = (int) $u['id'];
+            header('Location: ' . ($ehProfessor ? 'admin.php' : 'index.php'));
+            exit;
+        }
+    } else {
+        $erro = 'E-mail ou senha incorretos.';
     }
-    $erro = 'E-mail ou senha incorretos.';
 }
+
+$titulo = $tipo === 'professor' ? 'Entrar como professor orientador' : 'Entrar como estagiário';
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -37,21 +48,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body>
 <main>
-  <h1>Entrar</h1>
+  <h1><?= htmlspecialchars($titulo) ?></h1>
+
+  <nav class="abas">
+    <a href="login.php?tipo=estagiario" class="<?= $tipo === 'estagiario' ? 'ativa' : '' ?>">Estagiário</a>
+    <a href="login.php?tipo=professor" class="<?= $tipo === 'professor' ? 'ativa' : '' ?>">Professor orientador</a>
+  </nav>
 
   <?php if ($erro): ?><p class="erro"><?= htmlspecialchars($erro) ?></p><?php endif; ?>
 
   <form method="post" class="card">
+    <input type="hidden" name="tipo" value="<?= htmlspecialchars($tipo) ?>">
     <label>E-mail
       <input type="email" name="email" value="<?= htmlspecialchars($email) ?>" required>
     </label>
     <label>Senha
-      <input type="password" name="senha" required>
+      <input type="password" name="senha" id="senha" required>
+    </label>
+    <label class="ver-senha">
+      <input type="checkbox" onclick="document.getElementById('senha').type = this.checked ? 'text' : 'password'">
+      Ver senha
     </label>
     <button type="submit">Entrar</button>
   </form>
 
-  <p>Não tem conta? <a href="cadastro.php">Criar conta</a></p>
+  <p>Não tem conta? <a href="cadastro.php?tipo=<?= htmlspecialchars($tipo) ?>">Criar conta de <?= $tipo === 'professor' ? 'professor orientador' : 'estagiário' ?></a></p>
 </main>
 </body>
 </html>

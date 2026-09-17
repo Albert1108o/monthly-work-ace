@@ -8,6 +8,7 @@ if (usuarioLogado()) {
     exit;
 }
 
+$tipo = ($_POST['tipo'] ?? $_GET['tipo'] ?? 'estagiario') === 'professor' ? 'professor' : 'estagiario';
 $erro = null;
 $nome = '';
 $email = '';
@@ -33,10 +34,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $novoId = (int) $stmt->fetchColumn();
             $_SESSION['usuario_id'] = $novoId;
 
-            // O primeiro usuário cadastrado se torna administrador automaticamente
             $totalUsuarios = (int) db()->query('SELECT COUNT(*) FROM usuarios')->fetchColumn();
-            if ($totalUsuarios <= 1) {
+            if ($tipo === 'professor' || $totalUsuarios <= 1) {
                 addRole($novoId, 'admin');
+                header('Location: admin.php');
+                exit;
             }
 
             header('Location: index.php');
@@ -44,6 +46,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
+
+$titulo = $tipo === 'professor' ? 'Criar conta de professor orientador' : 'Criar conta de estagiário';
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -55,11 +59,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body>
 <main>
-  <h1>Criar conta</h1>
+  <h1><?= htmlspecialchars($titulo) ?></h1>
+
+  <nav class="abas">
+    <a href="cadastro.php?tipo=estagiario" class="<?= $tipo === 'estagiario' ? 'ativa' : '' ?>">Estagiário</a>
+    <a href="cadastro.php?tipo=professor" class="<?= $tipo === 'professor' ? 'ativa' : '' ?>">Professor orientador</a>
+  </nav>
 
   <?php if ($erro): ?><p class="erro"><?= htmlspecialchars($erro) ?></p><?php endif; ?>
 
   <form method="post" class="card">
+    <input type="hidden" name="tipo" value="<?= htmlspecialchars($tipo) ?>">
     <label>Nome
       <input type="text" name="nome" value="<?= htmlspecialchars($nome) ?>" required>
     </label>
@@ -67,15 +77,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <input type="email" name="email" value="<?= htmlspecialchars($email) ?>" required>
     </label>
     <label>Senha
-      <input type="password" name="senha" minlength="6" required>
+      <input type="password" name="senha" id="senha" minlength="6" required>
     </label>
     <label>Repetir senha
-      <input type="password" name="senha2" minlength="6" required>
+      <input type="password" name="senha2" id="senha2" minlength="6" required>
+    </label>
+    <label class="ver-senha">
+      <input type="checkbox" onclick="var t = this.checked ? 'text' : 'password'; document.getElementById('senha').type = t; document.getElementById('senha2').type = t;">
+      Ver senhas
     </label>
     <button type="submit">Cadastrar</button>
   </form>
 
-  <p>Já tem conta? <a href="login.php">Entrar</a></p>
+  <p>Já tem conta? <a href="login.php?tipo=<?= htmlspecialchars($tipo) ?>">Entrar</a></p>
 </main>
 </body>
 </html>
