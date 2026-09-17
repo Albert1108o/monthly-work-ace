@@ -4,7 +4,21 @@ require __DIR__ . '/auth.php';
 
 $usuario = exigirAdmin();
 
-$mes = $_GET['mes'] ?? date('Y-m');
+$aviso = null;
+$sucesso = null;
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'excluir_usuario') {
+    $alvo = (int) ($_POST['id'] ?? 0);
+    if ($alvo === (int) $usuario['id']) {
+        $aviso = 'Você não pode excluir a sua própria conta.';
+    } elseif ($alvo > 0) {
+        $stmt = db()->prepare('DELETE FROM usuarios WHERE id = ?');
+        $stmt->execute([$alvo]);
+        $sucesso = 'Usuário excluído junto com todos os registros dele.';
+    }
+}
+
+$mes = $_POST['mes'] ?? $_GET['mes'] ?? date('Y-m');
 if (!preg_match('/^\d{4}-\d{2}$/', $mes)) {
     $mes = date('Y-m');
 }
