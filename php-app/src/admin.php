@@ -7,7 +7,9 @@ $usuario = exigirAdmin();
 $aviso = null;
 $sucesso = null;
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'excluir_usuario') {
+$acao = $_POST['acao'] ?? '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $acao === 'excluir_usuario') {
     $alvo = (int) ($_POST['id'] ?? 0);
     if ($alvo === (int) $usuario['id']) {
         $aviso = 'Você não pode excluir a sua própria conta.';
@@ -15,6 +17,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['acao'] ?? '') === 'excluir
         $stmt = db()->prepare('DELETE FROM usuarios WHERE id = ?');
         $stmt->execute([$alvo]);
         $sucesso = 'Usuário excluído junto com todos os registros dele.';
+    }
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $acao === 'cadastrar_aluno') {
+    $cpf = preg_replace('/\D/', '', (string) ($_POST['cpf'] ?? '')) ?? '';
+    $nascimento = (string) ($_POST['nascimento'] ?? '');
+
+    if (strlen($cpf) !== 11 || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $nascimento)) {
+        $aviso = 'Informe um CPF com 11 dígitos e uma data de nascimento válida.';
+    } else {
+        $existe = db()->prepare('SELECT 1 FROM usuarios WHERE cpf = ?');
+        $existe->execute([$cpf]);
+        if ($existe->fetch()) {
+            $aviso = 'Já existe um estagiário cadastrado com esse CPF.';
+        } else {
+            $stmt = db()->prepare('INSERT INTO usuarios (nome, cpf, data_nascimento) VALUES (?, ?, ?)');
+            $stmt->execute([$cpf, $cpf, $nascimento]);
+            $sucesso = 'Estagiário cadastrado. Ele entra com o CPF e a data de nascimento.';
+        }
     }
 }
 
