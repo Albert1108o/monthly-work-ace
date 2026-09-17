@@ -22,3 +22,12 @@ a { color: var(--accent); }
 ul { padding-left: 20px; }
 ul li { margin-bottom: 8px; }
 h2 { font-size: 1.15rem; margin-top: 28px; margin-bottom: 12px; }
+
+/* Abas de tipo de conta (estagiário / professor) */
+.abas { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
+.abas a { flex:1; text-align:center; padding:10px 12px; border-radius:10px; text-decoration:none;
+  background:var(--card); border:1px solid rgba(255,255,255,.08); color:var(--muted); font-size:.9rem; }
+.abas a.ativa { background:var(--accent); color:#1a1207; border-color:var(--accent); font-weight:600; }
+.ver-senha { flex-direction:row; align-items:center; gap:8px; margin-top:-4px; }
+.ver-senha input { width:auto; }
+.sucesso { color:#8aff8a; }
