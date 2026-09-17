@@ -53,6 +53,14 @@ $stmt = db()->prepare('SELECT * FROM registros WHERE usuario_id = ? AND substr(d
 $stmt->execute([$usuarioId, $mes]);
 $registros = $stmt->fetchAll();
 
+$stmtGeral = db()->prepare('SELECT COALESCE(SUM(horas), 0) FROM registros WHERE usuario_id = ?');
+$stmtGeral->execute([$usuarioId]);
+$totalGeral = (float) $stmtGeral->fetchColumn();
+
+$metaHoras = 300.0;
+$restantes = max(0.0, $metaHoras - $totalGeral);
+$percentual = $metaHoras > 0 ? min(100.0, $totalGeral / $metaHoras * 100) : 0.0;
+
 $totalHoras = 0.0;
 foreach ($registros as $r) {
     $totalHoras += (float) $r['horas'];
@@ -107,6 +115,16 @@ function hhmm(float $h): string
     </label>
     <button type="submit">Salvar</button>
   </form>
+
+  <section class="card progresso">
+    <div class="titulo">Progresso do estágio</div>
+    <div class="numeros">
+      <div><strong><?= hhmm($totalGeral) ?></strong> <span class="meta">/ <?= (int) $metaHoras ?>h</span></div>
+      <div class="restantes"><?= hhmm($restantes) ?> restantes</div>
+    </div>
+    <div class="barra"><span style="width: <?= number_format($percentual, 2, '.', '') ?>%"></span></div>
+    <div class="percentual"><?= number_format($percentual, 1, ',', '') ?>% concluído</div>
+  </section>
 
   <section class="resumo">
     <div class="card"><span>Dias trabalhados</span><strong><?= $diasTrabalhados ?></strong></div>
