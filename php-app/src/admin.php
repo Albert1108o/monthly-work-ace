@@ -113,12 +113,25 @@ $registros = $stmtReg->fetchAll();
   <?php if ($aviso): ?><p class="erro"><?= htmlspecialchars($aviso) ?></p><?php endif; ?>
   <?php if ($sucesso): ?><p class="sucesso"><?= htmlspecialchars($sucesso) ?></p><?php endif; ?>
 
+  <h2>Cadastrar estagiário</h2>
+  <form method="post" class="card linha">
+    <input type="hidden" name="acao" value="cadastrar_aluno">
+    <input type="hidden" name="mes" value="<?= htmlspecialchars($mes) ?>">
+    <label>CPF
+      <input type="text" name="cpf" inputmode="numeric" placeholder="somente números" required>
+    </label>
+    <label>Data de nascimento
+      <input type="date" name="nascimento" required>
+    </label>
+    <button type="submit">Cadastrar estagiário</button>
+  </form>
+
   <h2>Usuários e horas do mês</h2>
   <table class="card">
     <thead>
       <tr>
-        <th>Nome</th>
-        <th>E-mail</th>
+        <th>Nome / CPF</th>
+        <th>Tipo</th>
         <th>Dias trabalhados</th>
         <th>Total do mês</th>
         <th></th>
@@ -128,10 +141,10 @@ $registros = $stmtReg->fetchAll();
     <?php if (!$usuarios): ?>
       <tr><td colspan="5" class="vazio">Nenhum usuário cadastrado.</td></tr>
     <?php endif; ?>
-    <?php foreach ($usuarios as $u): ?>
+    <?php foreach ($usuarios as $u): $ehProfessor = hasRole((int) $u['id'], 'admin'); ?>
       <tr>
-        <td><?= htmlspecialchars((string) $u['nome']) ?></td>
-        <td><?= htmlspecialchars((string) $u['email']) ?></td>
+        <td><?= $ehProfessor ? htmlspecialchars((string) $u['nome']) : cpfFormatado($u['cpf'] ?? null) ?></td>
+        <td><?= $ehProfessor ? 'Professor orientador' : 'Estagiário' ?></td>
         <td><?= (int) $u['dias_trabalhados'] ?></td>
         <td><?= hhmm((float) $u['total_horas']) ?></td>
         <td>
