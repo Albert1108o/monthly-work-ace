@@ -50,14 +50,23 @@ function hhmm(float $h): string
     return sprintf('%dh %02dmin', intdiv($min, 60), $min % 60);
 }
 
+function cpfFormatado(?string $cpf): string
+{
+    $cpf = preg_replace('/\D/', '', (string) $cpf) ?? '';
+    if (strlen($cpf) !== 11) {
+        return '—';
+    }
+    return substr($cpf, 0, 3) . '.' . substr($cpf, 3, 3) . '.' . substr($cpf, 6, 3) . '-' . substr($cpf, 9, 2);
+}
+
 // Todos os usuários com total de horas no mês selecionado
 $stmt = db()->prepare(
-    'SELECT u.id, u.nome, u.email,
+    'SELECT u.id, u.nome, u.email, u.cpf, u.data_nascimento,
             COALESCE(SUM(r.horas), 0) AS total_horas,
             COUNT(r.id) AS dias_trabalhados
      FROM usuarios u
      LEFT JOIN registros r ON r.usuario_id = u.id AND substr(r.dia,1,7) = ?
-     GROUP BY u.id, u.nome, u.email
+     GROUP BY u.id, u.nome, u.email, u.cpf, u.data_nascimento
      ORDER BY u.nome'
 );
 $stmt->execute([$mes]);
@@ -104,12 +113,25 @@ $registros = $stmtReg->fetchAll();
   <?php if ($aviso): ?><p class="erro"><?= htmlspecialchars($aviso) ?></p><?php endif; ?>
   <?php if ($sucesso): ?><p class="sucesso"><?= htmlspecialchars($sucesso) ?></p><?php endif; ?>
 
+  <h2>Cadastrar estagiário</h2>
+  <form method="post" class="card linha">
+    <input type="hidden" name="acao" value="cadastrar_aluno">
+    <input type="hidden" name="mes" value="<?= htmlspecialchars($mes) ?>">
+    <label>CPF
+      <input type="text" name="cpf" inputmode="numeric" placeholder="somente números" required>
+    </label>
+    <label>Data de nascimento
+      <input type="date" name="nascimento" required>
+    </label>
+    <button type="submit">Cadastrar estagiário</button>
+  </form>
+
   <h2>Usuários e horas do mês</h2>
   <table class="card">
     <thead>
       <tr>
-        <th>Nome</th>
-        <th>E-mail</th>
+        <th>Nome / CPF</th>
+        <th>Tipo</th>
         <th>Dias trabalhados</th>
         <th>Total do mês</th>
         <th></th>
@@ -119,10 +141,10 @@ $registros = $stmtReg->fetchAll();
     <?php if (!$usuarios): ?>
       <tr><td colspan="5" class="vazio">Nenhum usuário cadastrado.</td></tr>
     <?php endif; ?>
-    <?php foreach ($usuarios as $u): ?>
+    <?php foreach ($usuarios as $u): $ehProfessor = hasRole((int) $u['id'], 'admin'); ?>
       <tr>
-        <td><?= htmlspecialchars((string) $u['nome']) ?></td>
-        <td><?= htmlspecialchars((string) $u['email']) ?></td>
+        <td><?= $ehProfessor ? htmlspecialchars((string) $u['nome']) : cpfFormatado($u['cpf'] ?? null) ?></td>
+        <td><?= $ehProfessor ? 'Professor orientador' : 'Estagiário' ?></td>
         <td><?= (int) $u['dias_trabalhados'] ?></td>
         <td><?= hhmm((float) $u['total_horas']) ?></td>
         <td>

@@ -9,13 +9,16 @@ docker compose up --build
 
 Acesse http://localhost:8000
 
-- Crie uma conta em `cadastro.php`.
-- Faça login em `login.php`.
-- Na página principal, registre o dia, horário de entrada e saída (um registro por dia; salvar de novo atualiza).
+- Somente o **professor orientador** cria a própria conta em `cadastro.php` (nome, e-mail e senha).
+- Login em `login.php`, com duas abas:
+  - **Estagiário**: CPF e data de nascimento.
+  - **Professor orientador**: e-mail e senha (com opção "ver senha").
+- O professor cadastra os estagiários na própria página (`admin.php`), informando CPF e data de nascimento.
+- Na página principal, cada pessoa registra o dia, horário de entrada e saída (um registro por dia; salvar de novo atualiza).
 - Escolha o mês para ver o total de horas, dias trabalhados e média diária.
-- O primeiro usuário cadastrado vira administrador automaticamente.
-- Administradores acessam `admin.php` para ver todos os usuários e as horas trabalhadas no mês.
-- Administradores podem promover outros usuários a administrador em `promover-admin.php`.
+- O card "Progresso do estágio" mostra o total acumulado em relação à meta de 300h.
+- Em `admin.php` o professor vê todos os usuários, as horas do mês e pode excluir usuários (menos a própria conta).
+- Professores podem promover outros usuários em `promover-admin.php`.
 
 ## Usar as mesmas contas em várias máquinas
 
