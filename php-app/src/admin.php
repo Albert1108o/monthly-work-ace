@@ -50,14 +50,23 @@ function hhmm(float $h): string
     return sprintf('%dh %02dmin', intdiv($min, 60), $min % 60);
 }
 
+function cpfFormatado(?string $cpf): string
+{
+    $cpf = preg_replace('/\D/', '', (string) $cpf) ?? '';
+    if (strlen($cpf) !== 11) {
+        return '—';
+    }
+    return substr($cpf, 0, 3) . '.' . substr($cpf, 3, 3) . '.' . substr($cpf, 6, 3) . '-' . substr($cpf, 9, 2);
+}
+
 // Todos os usuários com total de horas no mês selecionado
 $stmt = db()->prepare(
-    'SELECT u.id, u.nome, u.email,
+    'SELECT u.id, u.nome, u.email, u.cpf, u.data_nascimento,
             COALESCE(SUM(r.horas), 0) AS total_horas,
             COUNT(r.id) AS dias_trabalhados
      FROM usuarios u
      LEFT JOIN registros r ON r.usuario_id = u.id AND substr(r.dia,1,7) = ?
-     GROUP BY u.id, u.nome, u.email
+     GROUP BY u.id, u.nome, u.email, u.cpf, u.data_nascimento
      ORDER BY u.nome'
 );
 $stmt->execute([$mes]);
