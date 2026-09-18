@@ -21,10 +21,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $acao === 'excluir_usuario') {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $acao === 'cadastrar_aluno') {
+    $nome = trim((string) ($_POST['nome'] ?? ''));
     $cpf = preg_replace('/\D/', '', (string) ($_POST['cpf'] ?? '')) ?? '';
     $nascimento = (string) ($_POST['nascimento'] ?? '');
 
-    if (strlen($cpf) !== 11 || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $nascimento)) {
+    if ($nome === '') {
+        $aviso = 'Informe o nome do estagiário.';
+    } elseif (strlen($cpf) !== 11 || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $nascimento)) {
         $aviso = 'Informe um CPF com 11 dígitos e uma data de nascimento válida.';
     } else {
         $existe = db()->prepare('SELECT 1 FROM usuarios WHERE cpf = ?');
@@ -33,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $acao === 'cadastrar_aluno') {
             $aviso = 'Já existe um estagiário cadastrado com esse CPF.';
         } else {
             $stmt = db()->prepare('INSERT INTO usuarios (nome, cpf, data_nascimento) VALUES (?, ?, ?)');
-            $stmt->execute([$cpf, $cpf, $nascimento]);
+            $stmt->execute([$nome, $cpf, $nascimento]);
             $sucesso = 'Estagiário cadastrado. Ele entra com o CPF e a data de nascimento.';
         }
     }
@@ -117,6 +120,9 @@ $registros = $stmtReg->fetchAll();
   <form method="post" class="card linha">
     <input type="hidden" name="acao" value="cadastrar_aluno">
     <input type="hidden" name="mes" value="<?= htmlspecialchars($mes) ?>">
+    <label>Nome
+      <input type="text" name="nome" placeholder="nome do estagiário" required>
+    </label>
     <label>CPF
       <input type="text" name="cpf" inputmode="numeric" placeholder="somente números" required>
     </label>
@@ -141,9 +147,15 @@ $registros = $stmtReg->fetchAll();
     <?php if (!$usuarios): ?>
       <tr><td colspan="5" class="vazio">Nenhum usuário cadastrado.</td></tr>
     <?php endif; ?>
-    <?php foreach ($usuarios as $u): $ehProfessor = hasRole((int) $u['id'], 'admin'); ?>
+    <?php foreach ($usuarios as $u): $ehProfessor = hasRole((int) $u['id'], 'admin');
+      $nomeExibido = (string) $u['nome'];
+      // Estagiários antigos foram salvos com o CPF no lugar do nome
+      if (!$ehProfessor && preg_match('/^\d{11}$/', $nomeExibido)) {
+        $nomeExibido = cpfFormatado($nomeExibido) . ' (sem nome)';
+      }
+    ?>
       <tr>
-        <td><?= $ehProfessor ? htmlspecialchars((string) $u['nome']) : cpfFormatado($u['cpf'] ?? null) ?></td>
+        <td><?= htmlspecialchars($nomeExibido) ?></td>
         <td><?= $ehProfessor ? 'Professor orientador' : 'Estagiário' ?></td>
         <td><?= (int) $u['dias_trabalhados'] ?></td>
         <td><?= hhmm((float) $u['total_horas']) ?></td>
