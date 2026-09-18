@@ -147,9 +147,15 @@ $registros = $stmtReg->fetchAll();
     <?php if (!$usuarios): ?>
       <tr><td colspan="5" class="vazio">Nenhum usuário cadastrado.</td></tr>
     <?php endif; ?>
-    <?php foreach ($usuarios as $u): $ehProfessor = hasRole((int) $u['id'], 'admin'); ?>
+    <?php foreach ($usuarios as $u): $ehProfessor = hasRole((int) $u['id'], 'admin');
+      $nomeExibido = (string) $u['nome'];
+      // Estagiários antigos foram salvos com o CPF no lugar do nome
+      if (!$ehProfessor && preg_match('/^\d{11}$/', $nomeExibido)) {
+        $nomeExibido = cpfFormatado($nomeExibido) . ' (sem nome)';
+      }
+    ?>
       <tr>
-        <td><?= $ehProfessor ? htmlspecialchars((string) $u['nome']) : cpfFormatado($u['cpf'] ?? null) ?></td>
+        <td><?= htmlspecialchars($nomeExibido) ?></td>
         <td><?= $ehProfessor ? 'Professor orientador' : 'Estagiário' ?></td>
         <td><?= (int) $u['dias_trabalhados'] ?></td>
         <td><?= hhmm((float) $u['total_horas']) ?></td>
